@@ -120,7 +120,6 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-
     static public void sortAddresses(String inputName, String outputName) {
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
@@ -173,7 +172,7 @@ public class JavaTasks {
 
                 for (Integer currentNumber : num_name_map.keySet()) {
                     Iterator<String> currentNameIter = num_name_map.get(currentNumber).iterator();
-        
+
                     writer.write(currentAddress + " " + currentNumber + " - " + currentNameIter.next());
 
                     while (currentNameIter.hasNext())
@@ -222,21 +221,21 @@ public class JavaTasks {
      * 121.3
      */
     static public void sortTemperatures(String inputName, String outputName) {
-        List<Integer> tempList = new ArrayList<>();
+        List<Float> numbList = new ArrayList<>();
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
 
         try {
             Scanner scanner = new Scanner(inputFile);
             while (scanner.hasNext())
-                tempList.add(Integer.parseInt(scanner.nextLine()));
+                numbList.add(Float.parseFloat(scanner.nextLine()));
             scanner.close();
 
-            Collections.sort(tempList);
+            Collections.sort(numbList);
 
             Writer writer = new FileWriter(outputFile);
-            for (int el : tempList)
-                writer.write(el + '\n');
+            for (Float el : numbList)
+                writer.write(el.toString() + '\n');
             writer.close();
         }
         catch (Exception e) {
@@ -274,7 +273,46 @@ public class JavaTasks {
      * 2
      */
     static public void sortSequence(String inputName, String outputName) {
-        throw new NotImplementedError();
+        List<Integer> numbList = new LinkedList<>();
+        File inputFile = new File(inputName);
+        File outputFile = new File(outputName);
+
+        try {
+            Scanner scanner = new Scanner(inputFile);
+            while (scanner.hasNext())
+                numbList.add(Integer.parseInt(scanner.nextLine()));
+            scanner.close();
+
+            Map<Integer, Integer> counter = new HashMap<>();
+
+            for (int el : numbList)
+                if (counter.containsKey(el))
+                    counter.put(el, counter.get(el) + 1);
+                else
+                    counter.put(el, 1);
+
+            int maxElem = 0;
+            int maxCount = 0;
+            for (Map.Entry<Integer, Integer> el : counter.entrySet()) {
+                if (maxCount < el.getValue() || (maxCount == el.getValue() && maxElem < el.getKey())) {
+                    maxCount = el.getValue();
+                    maxElem = el.getKey();
+                }
+            }
+            List<Integer> deleteList = new LinkedList<>();
+            deleteList.add(maxElem);
+
+            numbList.removeAll(deleteList);
+            for (int i = 0; i < maxCount; ++i)
+                numbList.add(maxElem);
+
+            Writer writer = new FileWriter(outputFile);
+            for (int el : numbList)
+                writer.write(el + '\n');
+            writer.close();
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     /**
@@ -292,6 +330,17 @@ public class JavaTasks {
      * Результат: second = [1 3 4 9 9 13 15 20 23 28]
      */
     static <T extends Comparable<T>> void mergeArrays(T[] first, T[] second) {
-        throw new NotImplementedError();
+        int index_view = first.length;
+        int index_fill = 0;
+        for (int i = 0; i < first.length; ++i) {
+            int compare = index_view < second.length ? first[i].compareTo(second[index_view]) : -1;
+
+            if (compare > 0) {
+                second[index_fill++] = second[index_view++];
+                i--;
+            } else
+                second[index_fill++] = first[i];
+
+        }
     }
 }
