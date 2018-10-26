@@ -1,6 +1,12 @@
 package lesson1;
 
 import kotlin.NotImplementedError;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class JavaTasks {
@@ -32,8 +38,60 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
+
+    static public class Time implements  Comparable<Time> {
+        public Time(String timeStr) {
+            if (!timeStr.matches("^\\d{2}:\\d{2}:\\d{2}$"))
+                throw new IllegalArgumentException("Wrong time format");
+
+            str = timeStr;
+            String[] h_m_s_str = timeStr.split(":");
+            int h = Integer.parseInt(h_m_s_str[0]);
+            int m = Integer.parseInt(h_m_s_str[1]);
+            int s = Integer.parseInt(h_m_s_str[2]);
+
+            if (h > 24 || m > 60 || s > 60)
+                throw new IllegalArgumentException("Wrong time format");
+
+            sec = h * 3600 + m * 60 + s;
+        }
+
+        @Override
+        public String toString() {
+            return str;
+        }
+
+        @Override
+        public int compareTo(@NotNull Time o) {
+            return this.sec - o.sec;
+        }
+
+        private int sec;
+        private String str;
+    }
+
     static public void sortTimes(String inputName, String outputName) {
-        throw new NotImplementedError();
+        File inputFile = new File(inputName);
+        File outputFile = new File(outputName);
+
+        List<Time> timeList = new ArrayList<>();
+
+        try {
+            Scanner scanner = new Scanner(inputFile);
+            while (scanner.hasNext())
+                timeList.add(new Time(scanner.next()));
+            scanner.close();
+
+            Collections.sort(timeList);
+
+            Writer writer = new FileWriter(outputFile);
+            for (Time el : timeList)
+                writer.write(el.toString() + '\n');
+            writer.close();
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     /**
@@ -62,8 +120,75 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
+
     static public void sortAddresses(String inputName, String outputName) {
-        throw new NotImplementedError();
+        File inputFile = new File(inputName);
+        File outputFile = new File(outputName);
+
+        Map<String, Map<Integer, Set<String>>> treeMultiMap = new TreeMap<>();
+
+        try {
+            Scanner scanner = new Scanner(inputFile);
+            while (scanner.hasNext()) {
+                String next = scanner.nextLine();
+                String[] name_add = next.split(" - ");
+
+                if (name_add.length != 2)
+                    throw new IllegalArgumentException("Wrong format: " + next);
+
+                String[] add_num = name_add[1].trim().split(" ");
+                if (add_num.length != 2)
+                    throw new IllegalArgumentException("Wrong format: " + next);
+
+                String name = name_add[0].trim();
+                String address = add_num[0];
+                int number = Integer.parseInt(add_num[1]);
+
+                Map<Integer, Set<String>> numb_names_map = treeMultiMap.get(address);
+
+                if (numb_names_map != null) {
+                    Set<String> names = numb_names_map.get(number);
+
+                    if (names != null)
+                        names.add(name);
+                    else {
+                        Set<String> firstSet = new TreeSet<>();
+                        firstSet.add(name);
+                        numb_names_map.put(number, firstSet);
+                    }
+                } else {
+                    Set<String> firstSet = new TreeSet<>();
+                    firstSet.add(name);
+                    Map<Integer, Set<String>> firstMap = new HashMap<>();
+                    firstMap.put(number, firstSet);
+                    treeMultiMap.put(address, firstMap);
+                }
+            }
+            scanner.close();
+
+            Writer writer = new FileWriter(outputFile);
+
+            for (String currentAddress : treeMultiMap.keySet()) {
+                Map<Integer, Set<String>> num_name_map = treeMultiMap.get(currentAddress);
+
+                for (Integer currentNumber : num_name_map.keySet()) {
+                    Iterator<String> currentNameIter = num_name_map.get(currentNumber).iterator();
+        
+                    writer.write(currentAddress + " " + currentNumber + " - " + currentNameIter.next());
+
+                    while (currentNameIter.hasNext())
+                        writer.write(", " + currentNameIter.next());
+
+                    writer.write('\n');
+                }
+            }
+
+            writer.close();
+        }
+
+        catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     /**
@@ -97,7 +222,26 @@ public class JavaTasks {
      * 121.3
      */
     static public void sortTemperatures(String inputName, String outputName) {
-        throw new NotImplementedError();
+        List<Integer> tempList = new ArrayList<>();
+        File inputFile = new File(inputName);
+        File outputFile = new File(outputName);
+
+        try {
+            Scanner scanner = new Scanner(inputFile);
+            while (scanner.hasNext())
+                tempList.add(Integer.parseInt(scanner.nextLine()));
+            scanner.close();
+
+            Collections.sort(tempList);
+
+            Writer writer = new FileWriter(outputFile);
+            for (int el : tempList)
+                writer.write(el + '\n');
+            writer.close();
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     /**
