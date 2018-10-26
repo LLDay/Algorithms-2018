@@ -1,6 +1,5 @@
 package lesson1;
 
-import kotlin.NotImplementedError;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -120,11 +119,12 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
+
     static public void sortAddresses(String inputName, String outputName) {
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
 
-        Map<String, Map<Integer, Set<String>>> treeMultiMap = new TreeMap<>();
+        Map<String, List<String>> treeMultiMap = new TreeMap<>();
 
         try {
             Scanner scanner = new Scanner(inputFile);
@@ -135,7 +135,7 @@ public class JavaTasks {
                 if (name_add.length != 2)
                     throw new IllegalArgumentException("Wrong format: " + next);
 
-                String[] add_num = name_add[1].trim().split(" ");
+                String[] add_num = name_add[1].trim().split("\\s");
                 if (add_num.length != 2)
                     throw new IllegalArgumentException("Wrong format: " + next);
 
@@ -143,43 +143,26 @@ public class JavaTasks {
                 String address = add_num[0];
                 int number = Integer.parseInt(add_num[1]);
 
-                Map<Integer, Set<String>> numb_names_map = treeMultiMap.get(address);
-
-                if (numb_names_map != null) {
-                    Set<String> names = numb_names_map.get(number);
-
-                    if (names != null)
-                        names.add(name);
-                    else {
-                        Set<String> firstSet = new TreeSet<>();
-                        firstSet.add(name);
-                        numb_names_map.put(number, firstSet);
-                    }
-                } else {
-                    Set<String> firstSet = new TreeSet<>();
-                    firstSet.add(name);
-                    Map<Integer, Set<String>> firstMap = new HashMap<>();
-                    firstMap.put(number, firstSet);
-                    treeMultiMap.put(address, firstMap);
+                String tmp = address + " " + number + " - ";
+                if (treeMultiMap.containsKey(tmp))
+                    treeMultiMap.get(tmp).add(name);
+                else {
+                    List<String> firstList = new ArrayList<>();
+                    firstList.add(name);
+                    treeMultiMap.put(tmp, firstList);
                 }
             }
             scanner.close();
 
             Writer writer = new FileWriter(outputFile);
+            for (Map.Entry<String, List<String>> elem : treeMultiMap.entrySet()) {
+                Iterator<String> namesIterator = elem.getValue().iterator();
+                writer.write(elem.getKey() + namesIterator.next());
 
-            for (String currentAddress : treeMultiMap.keySet()) {
-                Map<Integer, Set<String>> num_name_map = treeMultiMap.get(currentAddress);
+                while (namesIterator.hasNext())
+                    writer.write(", " + namesIterator.next());
 
-                for (Integer currentNumber : num_name_map.keySet()) {
-                    Iterator<String> currentNameIter = num_name_map.get(currentNumber).iterator();
-
-                    writer.write(currentAddress + " " + currentNumber + " - " + currentNameIter.next());
-
-                    while (currentNameIter.hasNext())
-                        writer.write(", " + currentNameIter.next());
-
-                    writer.write('\n');
-                }
+                writer.write('\n');
             }
 
             writer.close();
@@ -294,7 +277,7 @@ public class JavaTasks {
             int maxElem = 0;
             int maxCount = 0;
             for (Map.Entry<Integer, Integer> el : counter.entrySet()) {
-                if (maxCount < el.getValue() || (maxCount == el.getValue() && maxElem < el.getKey())) {
+                if (maxCount < el.getValue() || (maxCount == el.getValue() && maxElem > el.getKey())) {
                     maxCount = el.getValue();
                     maxElem = el.getKey();
                 }
@@ -308,8 +291,9 @@ public class JavaTasks {
 
             Writer writer = new FileWriter(outputFile);
             for (int el : numbList)
-                writer.write(el + '\n');
+                writer.write(el + "\n");
             writer.close();
+
         } catch (Exception e) {
             throw new IllegalArgumentException(e.getMessage());
         }
