@@ -674,6 +674,18 @@ abstract class AbstractAlgorithmsTests {
 
     fun baldaSearcher(baldaSearcher: (String, Set<String>) -> Set<String>) {
         assertEquals(setOf("ТРАВА", "КРАН", "АКВА", "НАРТЫ"),
-                baldaSearcher("input/balda_in1.txt", setOf("ТРАВА", "КРАН", "АКВА", "НАРТЫ", "РАК")))
+            baldaSearcher("input/balda_in1.txt", setOf("ТРАВА", "КРАН", "АКВА", "НАРТЫ", "РАК")))
+
+        val correctSet = setOf("СТАЛЬ", "ТАЛЬМА", "МАЛЬМА", "НАРОСТ", "СУРОК",
+                "СМАЛЬТА", "САМБО", "КАРАТ", "ПАРКА", "СПАРКА", "СТУПКА",
+                "ПОСОЛКА", "СОЛКА", "ЛОСЬ", "ХРУСТАЛЬ", "МАРАНЬЕ", "ОЛЕНИНА",
+                "АОСОЛКАРОТЬЛАТФОНАПАРЕФБОХРОМТДАМ") //змейка с буквы (1, 4)
+
+        val incorrectSet = setOf("КАРМА", "ПАЛЬТО", "ТАПОК", "СТУПЕНЬ", "ПОТОЛОК")
+
+        val testSet = TreeSet<String>(correctSet) //для другого порядка
+        testSet.addAll(incorrectSet)
+
+        assertEquals(correctSet,  baldaSearcher("input/balda_in2.txt", testSet))
     }
 }

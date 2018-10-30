@@ -2,9 +2,11 @@
 
 package lesson2
 
+import java.io.BufferedReader
 import java.io.File
 import java.lang.Math.floor
 import java.lang.Math.sqrt
+import java.nio.charset.Charset
 import java.util.*
 
 /**
@@ -248,6 +250,74 @@ fun calcPrimesNumber(limit: Int): Int {
  * В файле буквы разделены пробелами, строки -- переносами строк.
  * Остальные символы ни в файле, ни в словах не допускаются.
  */
+data class Pointer(val map: String, val rowLength: Int, val index: Int) {
+    private val previewIndexSet = HashSet<Int>()
+
+    private fun nextPointers(): List<Pointer> {
+        val moveList = listOf(1, -1, rowLength, -rowLength)
+        val endIndex = map.lastIndex
+        val list = mutableListOf<Pointer>()
+        
+        for (move in moveList) {
+            val nextIndex = index + move
+
+            if (nextIndex in 0..endIndex && !previewIndexSet.contains(nextIndex)) {
+                val nextPointer = Pointer(map, rowLength, nextIndex)
+                nextPointer.previewIndexSet.add(index)
+                list.add(nextPointer)
+            }
+        }
+        
+        return list
+    }
+
+    fun contains(word: String): Boolean {
+        if (word == "")
+            return true
+
+        if (word.first() != map[index])
+            return false
+
+        for (pointer in nextPointers())
+            if (pointer.contains(word.substring(1)))
+                return true
+
+        return false
+    }
+}
+
+//Трудоемкость O(n)
+//Ресурсоемкость O(n)
 fun baldaSearcher(inputName: String, words: Set<String>): Set<String> {
-    TODO()
+    val reader = File(inputName).reader()
+    val lines = reader.readLines()
+    reader.close()
+
+    val str = lines.joinToString("")
+            .replace("\n", "")
+            .replace(" ", "")
+
+    val rowLength = str.length / lines.size
+    val pointerList = mutableListOf<Pointer>()
+    var addingIndex = 0
+
+    val firstCharSet = HashSet<Char>()
+    for (word in words)
+        firstCharSet.add(word.first())
+
+    for (ch in str) {
+        if (firstCharSet.contains(ch))
+            pointerList.add(Pointer(str, rowLength, addingIndex))
+        addingIndex++
+    }
+
+    val resultSet = mutableSetOf<String>()
+
+    for (word in words) {
+        for (pointer in pointerList)
+            if (pointer.contains(word))
+                resultSet.add(word)
+    }
+
+    return resultSet
 }
