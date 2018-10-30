@@ -69,6 +69,8 @@ public class JavaTasks {
         private String str;
     }
 
+    //Трудоемкость O(n*log(n))
+    //Ресурсоемкость O(n)
     static public void sortTimes(String inputName, String outputName) {
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
@@ -119,7 +121,8 @@ public class JavaTasks {
      *
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
-
+    //Трудоемкость O(n*log(n))
+    //Ресурсоемкость O(n)
     static public void sortAddresses(String inputName, String outputName) {
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
@@ -203,6 +206,9 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
+
+    //Трудоемкость O(n*log(n))
+    //Ресурсоемкость O(n)
     static public void sortTemperatures(String inputName, String outputName) {
         List<Float> numbList = new ArrayList<>();
         File inputFile = new File(inputName);
@@ -255,6 +261,9 @@ public class JavaTasks {
      * 2
      * 2
      */
+
+    //Трудоемкость O(n*log(n))
+    //Ресурсоемкость O(n)
     static public void sortSequence(String inputName, String outputName) {
         List<Integer> numbList = new LinkedList<>();
         File inputFile = new File(inputName);
@@ -313,6 +322,8 @@ public class JavaTasks {
      *
      * Результат: second = [1 3 4 9 9 13 15 20 23 28]
      */
+    //Трудоемкость O(n)
+    //Ресурсоемкость O(1)
     static <T extends Comparable<T>> void mergeArrays(T[] first, T[] second) {
         int index_view = first.length;
         int index_fill = 0;

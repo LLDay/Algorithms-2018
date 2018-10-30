@@ -2,6 +2,11 @@
 
 package lesson2
 
+import java.io.File
+import java.lang.Math.floor
+import java.lang.Math.sqrt
+import java.util.*
+
 /**
  * Получение наибольшей прибыли (она же -- поиск максимального подмассива)
  * Простая
@@ -26,8 +31,45 @@ package lesson2
  *
  * В случае обнаружения неверного формата файла бросить любое исключение.
  */
+//Трудоемкость O(n)
+//Ресурсоемкость O(n)
 fun optimizeBuyAndSell(inputName: String): Pair<Int, Int> {
-    TODO()
+    val numberList = mutableListOf<Int>()
+
+    try {
+        val scanner = Scanner(File(inputName))
+        while (scanner.hasNext())
+            numberList.add(Integer.parseInt(scanner.next()))
+        scanner.close()
+    } catch (e: Exception) {
+        throw IllegalArgumentException(e.message)
+    }
+
+    var startIndex = -1
+    var endIndex = numberList.size
+
+    var minIndex = -1
+    var minNum = Integer.MAX_VALUE
+    var difference = Integer.MIN_VALUE
+
+    for (i in 0 until numberList.lastIndex) {
+        if (numberList[i] > numberList[i + 1])
+            continue
+
+        if (numberList[i] < minNum) {
+            minNum = numberList[i]
+            minIndex = i
+        }
+
+        val currDiff = numberList[i + 1] - minNum
+        if (currDiff > difference) {
+            startIndex = minIndex
+            endIndex = i + 1
+            difference = currDiff
+        }
+    }
+
+    return Pair(startIndex + 1, endIndex + 1)
 }
 
 /**
@@ -76,9 +118,15 @@ fun optimizeBuyAndSell(inputName: String): Pair<Int, Int> {
  * Х   Х
  * Х х Х
  */
+//Трудоемкость O(n)
+//Ресурсоемкость O(1)
 fun josephTask(menNumber: Int, choiceInterval: Int): Int {
-    TODO()
+    var res = 0
+    for (i in 1..menNumber)
+        res = (res + choiceInterval) % i
+    return res + 1
 }
+
 
 /**
  * Наибольшая общая подстрока.
@@ -91,8 +139,50 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * Если имеется несколько самых длинных общих подстрок одной длины,
  * вернуть ту из них, которая встречается раньше в строке first.
  */
+//Трудоемкость O(n²)
+//Ресурсоемкость O(n)
 fun longestCommonSubstring(first: String, second: String): String {
-    TODO()
+    var maxCommonSubstring = ""
+    var maxLength = 0
+    var firstIndex = 0
+
+    while (firstIndex + maxLength < second.length) {
+        val subString = first.substring(firstIndex, firstIndex + maxLength + 1)
+        val indexSearch = second.indexOf(subString)
+
+        if (indexSearch != -1) {
+            val builder = StringBuilder(subString)
+
+            var index = maxLength + 1
+            while (true) {
+                val firstAdvancedIndex = index + firstIndex
+                val secondAdvancedIndex = index + indexSearch
+
+                if (firstAdvancedIndex > first.lastIndex || secondAdvancedIndex > second.lastIndex)
+                    break
+
+                val nextCharSecond = second[secondAdvancedIndex]
+                val nextCharFirst = first[firstAdvancedIndex]
+
+                if (nextCharFirst == nextCharSecond) {
+                    builder.append(nextCharFirst)
+                    index++
+                    continue
+                }
+                break
+            }
+
+            val advancedSubString = builder.toString()
+            if (advancedSubString.length > maxCommonSubstring.length) {
+                maxCommonSubstring = advancedSubString
+                maxLength = subString.length
+            }
+        }
+
+        firstIndex++
+    }
+
+    return maxCommonSubstring
 }
 
 /**
@@ -105,8 +195,31 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Справка: простым считается число, которое делится нацело только на 1 и на себя.
  * Единица простым числом не считается.
  */
+fun isPrime(number: Int): Boolean {
+    val thr = floor(sqrt(number.toDouble())).toInt()
+
+    if (number % 2 == 0)
+        return false
+
+    for (i in 3..thr step 2)
+        if (number % i == 0)
+            return false
+
+    return true
+}
+
+//Трудоемкость O(n²)
+//Ресурсоемкость O(1)
 fun calcPrimesNumber(limit: Int): Int {
-    TODO()
+    var counter = 0
+    if (limit > 1)
+        counter++
+
+    for (i in 3..limit step 2)
+        if (isPrime(i))
+            counter++
+
+    return counter
 }
 
 /**
