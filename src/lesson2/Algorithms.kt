@@ -263,6 +263,7 @@ data class Pointer(val map: String, val rowLength: Int, val index: Int) {
 
             if (nextIndex in 0..endIndex && !previewIndexSet.contains(nextIndex)) {
                 val nextPointer = Pointer(map, rowLength, nextIndex)
+                nextPointer.previewIndexSet.addAll(this.previewIndexSet)
                 nextPointer.previewIndexSet.add(index)
                 list.add(nextPointer)
             }
