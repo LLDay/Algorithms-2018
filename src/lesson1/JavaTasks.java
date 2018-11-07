@@ -39,7 +39,7 @@ public class JavaTasks {
      */
 
     static public class Time implements  Comparable<Time> {
-        public Time(String timeStr) {
+        Time(String timeStr) {
             if (!timeStr.matches("^\\d{2}:\\d{2}:\\d{2}$"))
                 throw new IllegalArgumentException("Wrong time format");
 
@@ -49,7 +49,7 @@ public class JavaTasks {
             int m = Integer.parseInt(h_m_s_str[1]);
             int s = Integer.parseInt(h_m_s_str[2]);
 
-            if (h > 24 || m > 60 || s > 60)
+            if (h >= 24 || m >= 60 || s >= 60)
                 throw new IllegalArgumentException("Wrong time format");
 
             sec = h * 3600 + m * 60 + s;
@@ -211,20 +211,28 @@ public class JavaTasks {
     //Ресурсоемкость O(n)
     static public void sortTemperatures(String inputName, String outputName) {
         List<Float> numbList = new ArrayList<>();
+        Map<Float, Integer> tempMap = new TreeMap<>();
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
 
         try {
             Scanner scanner = new Scanner(inputFile);
-            while (scanner.hasNext())
-                numbList.add(Float.parseFloat(scanner.nextLine()));
+            while (scanner.hasNext()) {
+                float currentTemp = Float.parseFloat(scanner.nextLine());
+
+                Integer findRes = tempMap.get(currentTemp);
+
+                if (findRes != null)
+                    tempMap.put(currentTemp, findRes + 1);
+                else tempMap.put(currentTemp, 1);
+            }
             scanner.close();
 
-            Collections.sort(numbList);
-
             Writer writer = new FileWriter(outputFile);
-            for (Float el : numbList)
-                writer.write(el.toString() + '\n');
+            for (Map.Entry<Float, Integer> item : tempMap.entrySet())
+                for (int i = 0; i < item.getValue(); ++i)
+                    writer.write(item.getKey().toString() + '\n');
+
             writer.close();
         }
         catch (Exception e) {

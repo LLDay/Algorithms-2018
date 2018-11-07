@@ -2,12 +2,11 @@
 
 package lesson2
 
-import java.io.BufferedReader
 import java.io.File
 import java.lang.Math.floor
 import java.lang.Math.sqrt
-import java.nio.charset.Charset
 import java.util.*
+import kotlin.collections.LinkedHashSet
 
 /**
  * Получение наибольшей прибыли (она же -- поиск максимального подмассива)
@@ -251,7 +250,7 @@ fun calcPrimesNumber(limit: Int): Int {
  * Остальные символы ни в файле, ни в словах не допускаются.
  */
 data class Pointer(val map: String, val rowLength: Int, val index: Int) {
-    private val previewIndexSet = HashSet<Int>()
+    private val previewIndexSet = LinkedHashSet<Int>()
 
     private fun nextPointers(): List<Pointer> {
         val moveList = listOf(1, -1, rowLength, -rowLength)
