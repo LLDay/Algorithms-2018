@@ -1,10 +1,14 @@
 package lesson3
 
-import java.util.SortedSet
+import java.lang.Math.max
+import java.lang.Math.min
+import java.util.*
 import kotlin.test.*
 
 abstract class AbstractHeadTailTest {
     private lateinit var tree: SortedSet<Int>
+
+    private val rand = Random()
 
     protected fun fillTree(empty: SortedSet<Int>) {
         this.tree = empty
@@ -24,6 +28,7 @@ abstract class AbstractHeadTailTest {
 
     protected fun doHeadSetTest() {
         var set: SortedSet<Int> = tree.headSet(5)
+
         assertEquals(true, set.contains(1))
         assertEquals(true, set.contains(2))
         assertEquals(true, set.contains(3))
@@ -35,11 +40,9 @@ abstract class AbstractHeadTailTest {
         assertEquals(false, set.contains(9))
         assertEquals(false, set.contains(10))
 
-
         set = tree.headSet(127)
         for (i in 1..10)
             assertEquals(true, set.contains(i))
-
     }
 
     protected fun doTailSetTest() {
@@ -58,7 +61,6 @@ abstract class AbstractHeadTailTest {
         set = tree.tailSet(-128)
         for (i in 1..10)
             assertEquals(true, set.contains(i))
-
     }
 
     protected fun doHeadSetRelationTest() {
@@ -94,7 +96,56 @@ abstract class AbstractHeadTailTest {
     }
 
     protected fun doSubSetTest() {
-        TODO()
+        val testTree = KtBinaryTree<Int>()
+
+        for (i in 0..1000)
+            testTree.add(rand.nextInt())
+
+        val first = testTree.elementAt(rand.nextInt(testTree.size - 1))
+        val second = testTree.elementAt(rand.nextInt(testTree.size - 1))
+
+        val min = min(first, second)
+        val max = max(first, second)
+
+        val subSet = testTree.subSet(min, max)
+        val mutSet = mutableSetOf<Int>()
+
+        mutSet.addAll(testTree.tailSet(max))
+        mutSet.addAll(testTree.headSet(min))
+
+        assertEquals(mutSet.size + subSet.size, testTree.size)
+        for (item in subSet)
+            assertFalse(mutSet.contains(item))
+
+        val treeSet = testTree.toSet()
+        assertEquals(treeSet.size, testTree.size)
+
+        for (item in treeSet)
+            assertTrue(treeSet.contains(item))
     }
 
+    protected fun doRemoveTest() {
+        val testTree = KtBinaryTree<Int>()
+
+        for (i in 0..1000)
+            testTree.add(rand.nextInt())
+
+        val currentSize = testTree.size
+        val removeSet = mutableSetOf<Int>()
+
+        removeSet.add(testTree.first())
+        removeSet.add(testTree.last())
+
+        for (i in 0 until currentSize step 3)
+            removeSet.add(testTree.elementAt(i))
+
+        for (item in removeSet)
+            testTree.remove(item)
+
+        for (item in removeSet)
+            assertEquals(false, testTree.contains(item))
+
+        assertEquals(testTree.size, currentSize - removeSet.size)
+        assertEquals(true, testTree.checkInvariant())
+    }
 }

@@ -1,6 +1,6 @@
 package lesson3
 
-import java.util.SortedSet
+import java.util.*
 import kotlin.NoSuchElementException
 
 // Attention: comparable supported but comparator is not
@@ -11,13 +11,51 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
     override var size = 0
         private set
 
+    private val cache = TreeCache()
+
     private class Node<T>(val value: T) {
 
         var left: Node<T>? = null
 
         var right: Node<T>? = null
+
+        override fun toString(): String {
+            return value.toString()
+        }
     }
 
+    private inner class TreeCache {
+
+        private var cache = setOf<T>()
+
+        private var actual = false
+
+        private var cacheSize = 0
+
+        fun obsolete() {
+            actual = false
+        }
+
+        fun update() {
+            this.cache = toSet()
+            this.actual = true
+            this.cacheSize = size
+        }
+
+        //n = size
+        //Трудоемкость O(n)
+        //Ресурсоемкость O(n)
+        fun getCache(): Set<T> {
+            if (!this.actual || this.cacheSize != size)
+                update()
+
+            return this.cache
+        }
+    }
+
+    //n = size
+    //Трудоемкость O(ln n)
+    //Ресурсоемкость O(1)
     override fun add(element: T): Boolean {
         val closest = find(element)
         val comparison = if (closest == null) -1 else element.compareTo(closest.value)
@@ -50,12 +88,61 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         return right == null || right.value > node.value && checkInvariant(right)
     }
 
+    //n = size
+    //Трудоемкость O(ln n)
+    //Ресурсоемкость O(1)
+    private fun findHead(value: T) =
+            root?.let { findHead(it, null, value) }
+
+    private fun findHead(currentNode: Node<T>, lastNode: Node<T>?, value: T): Node<T>? {
+        if (value == currentNode.value)
+            return lastNode
+
+        if (currentNode.value < value)
+            return currentNode.right?.let { findHead(it, currentNode, value) }
+
+        return currentNode.left?.let { findHead(it, currentNode, value) }
+    }
+
     /**
      * Удаление элемента в дереве
      * Средняя
      */
+    //n = size
+    //Трудоемкость O(n*ln(n))
+    //Ресурсоемкость O(n)
     override fun remove(element: T): Boolean {
-        TODO()
+        if (root == null)
+            return false
+
+        if (root!!.value == element) {
+            val set = setWithoutHead(root!!)
+            root = null
+
+            for (item in set)
+                add(item)
+
+            size -= set.size + 1
+            return true
+        }
+
+        val head = findHead(element) ?: return false
+        val set: Set<T>
+
+        if (element > head.value) {
+            set = setWithoutHead(head.right!!)
+            head.right = null
+        } else {
+            set = setWithoutHead(head.left!!)
+            head.left = null
+        }
+
+        for (item in set)
+            add(item)
+
+        size -= set.size + 1
+        cache.obsolete()
+        return true
     }
 
     override operator fun contains(element: T): Boolean {
@@ -63,6 +150,9 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         return closest != null && element.compareTo(closest.value) == 0
     }
 
+    //n = size
+    //Трудоемкость O(ln(n))
+    //Ресурсоемкость O(1)
     private fun find(value: T): Node<T>? =
             root?.let { find(it, value) }
 
@@ -77,29 +167,34 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
 
     inner class BinaryTreeIterator : MutableIterator<T> {
 
-        private var current: Node<T>? = null
+        private var currentIndex = 0
 
         /**
          * Поиск следующего элемента
          * Средняя
          */
-        private fun findNext(): Node<T>? {
-            TODO()
-        }
+        override fun hasNext(): Boolean = currentIndex < cache.getCache().size
 
-        override fun hasNext(): Boolean = findNext() != null
-
+        //n = size
+        //Трудоемкость O(n)
+        //Ресурсоемкость O(n)
         override fun next(): T {
-            current = findNext()
-            return (current ?: throw NoSuchElementException()).value
+            val currCache = cache.getCache()
+            if (currentIndex >= currCache.size)
+                throw NoSuchElementException()
+
+            return currCache.elementAt(currentIndex++)
         }
 
         /**
          * Удаление следующего элемента
          * Сложная
          */
+        //n = size
+        //Трудоемкость O(n*ln(n))
+        //Ресурсоемкость O(n)
         override fun remove() {
-            TODO()
+            remove(cache.getCache().elementAt(currentIndex))
         }
     }
 
@@ -107,43 +202,107 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
 
     override fun comparator(): Comparator<in T>? = null
 
+    //n = size
+    //Трудоемкость O(n)
+    //Ресурсоемкость O(n)
+    private fun toSet(): Set<T> {
+        val set = mutableSetOf<T>()
+        if (root == null)
+            return setOf()
+
+        helperToSet(root!!, set)
+        return set
+    }
+
+    //n = size
+    //Трудоемкость O(n)
+    //Ресурсоемкость O(n)
+    private fun setWithoutHead(head: Node<T>): Set<T> {
+        val set = mutableSetOf<T>()
+
+        if (head.right != null)
+            set.addAll(toSet(head.right!!))
+
+        if (head.left != null)
+            set.addAll(toSet(head.left!!))
+
+        return set
+    }
+
+    private fun toSet(head: Node<T>): Set<T> {
+        val set = mutableSetOf<T>()
+        helperToSet(head, set)
+        return set
+    }
+
+    private fun helperToSet(head: Node<T>, set: MutableSet<T>) {
+        if (head.left != null)
+            helperToSet(head.left!!, set)
+
+        set.add(head.value)
+
+        if (head.right != null)
+            helperToSet(head.right!!, set)
+    }
+
     /**
      * Для этой задачи нет тестов (есть только заготовка subSetTest), но её тоже можно решить и их написать
      * Очень сложная
      */
+    //Not relative
+    //n = size
+    //Трудоемкость O(n²)
+    //Ресурсоемкость O(n)
     override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
-        TODO()
+        val currentSet = cache.getCache()
+
+        val subSet = currentSet.filter { it >= fromElement && it < toElement }
+        return subSet.toSortedSet()
     }
 
     /**
      * Найти множество всех элементов меньше заданного
      * Сложная
      */
+    //Not relative
+    //n = size
+    //Трудоемкость O(n²)
+    //Ресурсоемкость O(n)
     override fun headSet(toElement: T): SortedSet<T> {
-        TODO()
+        val currentSet = cache.getCache()
+
+        val subSet = currentSet.filter { it < toElement }
+        return subSet.toSortedSet()
     }
 
     /**
      * Найти множество всех элементов больше или равных заданного
      * Сложная
      */
+    //Not relative
+    //n = size
+    //Трудоемкость O(n²)
+    //Ресурсоемкость O(n)
     override fun tailSet(fromElement: T): SortedSet<T> {
-        TODO()
+        val currentSet = cache.getCache()
+
+        val subSet = currentSet.filter { it >= fromElement }
+        return subSet.toSortedSet()
     }
 
     override fun first(): T {
         var current: Node<T> = root ?: throw NoSuchElementException()
-        while (current.left != null) {
+        while (current.left != null)
             current = current.left!!
-        }
+
         return current.value
     }
 
     override fun last(): T {
         var current: Node<T> = root ?: throw NoSuchElementException()
-        while (current.right != null) {
+        while (current.right != null)
             current = current.right!!
-        }
+
         return current.value
     }
 }
