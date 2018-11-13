@@ -1,5 +1,6 @@
 package lesson3
 
+import org.junit.jupiter.api.assertThrows
 import java.lang.Math.max
 import java.lang.Math.min
 import java.util.*
@@ -148,5 +149,39 @@ abstract class AbstractHeadTailTest {
 
         assertEquals(testTree.size, currentSize - removeSet.size)
         assertEquals(true, testTree.checkInvariant())
+    }
+
+    protected open fun doIteratorTest() {
+        val testTree = KtBinaryTree<Int>()
+
+        for (i in 0..10)
+            testTree.add(i)
+
+        var iterator = testTree.iterator()
+
+        val list = mutableListOf<Int>()
+
+        while (iterator.hasNext()) {
+            val next = iterator.next()
+
+            if (next == 3 || next == 0 || next == 10)
+                iterator.remove()
+
+            list.add(next)
+        }
+
+        assertEquals(testTree, setOf(1, 2, 4, 5, 6, 7, 8, 9))
+        assertEquals(list, listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+
+        iterator = testTree.iterator()
+        testTree.add(10)
+
+        try {
+            iterator.next()
+        } catch (ex: ConcurrentModificationException) {
+            assert(true)
+            return
+        }
+        assert(false)
     }
 }

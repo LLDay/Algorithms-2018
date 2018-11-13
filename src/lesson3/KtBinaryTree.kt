@@ -37,6 +37,8 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
             actual = false
         }
 
+        fun isObsolete() = !actual || this.cacheSize != size
+
         fun update() {
             this.cache = toSet()
             this.actual = true
@@ -47,7 +49,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         //Трудоемкость O(n) (cached: O(1))
         //Ресурсоемкость O(n)
         fun getCache(): Set<T> {
-            if (!this.actual || this.cacheSize != size)
+            if (isObsolete())
                 update()
 
             return this.cache
@@ -180,6 +182,9 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         //Трудоемкость O(n) (cached: O(1))
         //Ресурсоемкость O(n)
         override fun next(): T {
+            if (cache.isObsolete())
+                throw ConcurrentModificationException()
+
             val currCache = cache.getCache()
             if (currentIndex >= currCache.size)
                 throw NoSuchElementException()
@@ -195,7 +200,11 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         //Трудоемкость O(n*ln(n))
         //Ресурсоемкость O(n)
         override fun remove() {
-            remove(cache.getCache().elementAt(currentIndex))
+            if (cache.isObsolete())
+                throw ConcurrentModificationException()
+
+            remove(cache.getCache().elementAt(--currentIndex))
+            cache.update()
         }
     }
 

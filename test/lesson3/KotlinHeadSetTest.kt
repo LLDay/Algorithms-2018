@@ -46,4 +46,10 @@ class KotlinHeadSetTest : AbstractHeadTailTest() {
     fun removeTest() {
         doRemoveTest()
     }
+
+    @Test
+    @Tag("Normal")
+    fun iteratorTest() {
+        doIteratorTest()
+    }
 }
