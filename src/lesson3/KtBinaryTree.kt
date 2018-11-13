@@ -1,5 +1,6 @@
 package lesson3
 
+import java.lang.Math.abs
 import java.util.*
 import kotlin.NoSuchElementException
 
@@ -26,7 +27,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
 
     private inner class TreeCache {
 
-        private var cache = setOf<T>()
+        private var cache = sortedSetOf<T>()
 
         private var actual = false
 
@@ -37,15 +38,15 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         }
 
         fun update() {
-            this.cache = toSet()
+            this.cache.addAll(toSet())
             this.actual = true
             this.cacheSize = size
         }
 
         //n = size
-        //Трудоемкость O(n)
+        //Трудоемкость O(n) (cached: O(1))
         //Ресурсоемкость O(n)
-        fun getCache(): Set<T> {
+        fun getCache(): SortedSet<T> {
             if (!this.actual || this.cacheSize != size)
                 update()
 
@@ -116,7 +117,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
             return false
 
         if (root!!.value == element) {
-            val set = setWithoutHead(root!!)
+            val set = toNormalSet(setWithoutHead(root!!))
             root = null
 
             for (item in set)
@@ -130,10 +131,10 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         val set: Set<T>
 
         if (element > head.value) {
-            set = setWithoutHead(head.right!!)
+            set = toNormalSet(setWithoutHead(head.right!!))
             head.right = null
         } else {
-            set = setWithoutHead(head.left!!)
+            set = toNormalSet(setWithoutHead(head.left!!))
             head.left = null
         }
 
@@ -176,7 +177,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         override fun hasNext(): Boolean = currentIndex < cache.getCache().size
 
         //n = size
-        //Трудоемкость O(n)
+        //Трудоемкость O(n) (cached: O(1))
         //Ресурсоемкость O(n)
         override fun next(): T {
             val currCache = cache.getCache()
@@ -235,6 +236,26 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         return set
     }
 
+    private fun toNormalSet(set: Set<T>): Set<T> {
+        val mutSet = mutableSetOf<T>()
+        val list = set.toList()
+        val center = list.size / 2
+
+        var adder = 0
+        var lastPos = center
+
+        while (abs(adder) < list.size) {
+            adder *= -1
+
+            lastPos += adder
+            mutSet.add(list[lastPos])
+
+            if (adder >= 0) adder++
+            else adder--
+        }
+        return mutSet
+    }
+
     private fun helperToSet(head: Node<T>, set: MutableSet<T>) {
         if (head.left != null)
             helperToSet(head.left!!, set)
@@ -251,7 +272,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      */
     //Not relative
     //n = size
-    //Трудоемкость O(n²)
+    //Трудоемкость O(n ln n)
     //Ресурсоемкость O(n)
     override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
         val currentSet = cache.getCache()
@@ -265,9 +286,6 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Сложная
      */
     //Not relative
-    //n = size
-    //Трудоемкость O(n²)
-    //Ресурсоемкость O(n)
     override fun headSet(toElement: T): SortedSet<T> {
         val currentSet = cache.getCache()
 
@@ -280,9 +298,6 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Сложная
      */
     //Not relative
-    //n = size
-    //Трудоемкость O(n²)
-    //Ресурсоемкость O(n)
     override fun tailSet(fromElement: T): SortedSet<T> {
         val currentSet = cache.getCache()
 

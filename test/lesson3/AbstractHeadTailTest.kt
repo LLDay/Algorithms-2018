@@ -47,6 +47,7 @@ abstract class AbstractHeadTailTest {
 
     protected fun doTailSetTest() {
         var set: SortedSet<Int> = tree.tailSet(5)
+
         assertEquals(false, set.contains(1))
         assertEquals(false, set.contains(2))
         assertEquals(false, set.contains(3))
