@@ -1,6 +1,5 @@
 package lesson3
 
-import java.lang.Math.abs
 import java.util.*
 import kotlin.NoSuchElementException
 
@@ -11,8 +10,6 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
 
     override var size = 0
         private set
-
-    private val cache = TreeCache()
 
     private class Node<T>(val value: T) {
 
@@ -25,39 +22,8 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         }
     }
 
-    private inner class TreeCache {
-
-        private var cache = setOf<T>()
-
-        private var actual = false
-
-        private var cacheSize = 0
-
-        fun obsolete() {
-            actual = false
-        }
-
-        fun isObsolete() = !actual || this.cacheSize != size
-
-        fun update() {
-            this.cache = toSet()
-            this.actual = true
-            this.cacheSize = size
-        }
-
-        //n = size
-        //Трудоемкость O(n) (cached: O(1))
-        //Ресурсоемкость O(n)
-        fun getCache(): Set<T> {
-            if (isObsolete())
-                update()
-
-            return this.cache
-        }
-    }
-
     //n = size
-    //Трудоемкость O(ln n)
+    //Трудоемкость O(n)
     //Ресурсоемкость O(1)
     override fun add(element: T): Boolean {
         val closest = find(element)
@@ -91,8 +57,19 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         return right == null || right.value > node.value && checkInvariant(right)
     }
 
+    private fun disconnect(node: Node<T>) {
+        val nodeHead = findHead(node.value)
+
+        if (nodeHead != null) {
+            if (nodeHead.value < node.value)
+                nodeHead.right = null
+            else
+                nodeHead.left = null
+        }
+    }
+
     //n = size
-    //Трудоемкость O(ln n)
+    //Трудоемкость O(n)
     //Ресурсоемкость O(1)
     private fun findHead(value: T) =
             root?.let { findHead(it, null, value) }
@@ -112,39 +89,59 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Средняя
      */
     //n = size
-    //Трудоемкость O(n*ln(n))
-    //Ресурсоемкость O(n)
+    //Трудоемкость O(n)
+    //Ресурсоемкость O(1)
     override fun remove(element: T): Boolean {
-        if (root == null)
+        if (root == null && !contains(element))
             return false
 
-        if (root!!.value == element) {
-            val set = toNormalSet(setWithoutHead(root!!))
+        if (size == 1) {
             root = null
-
-            for (item in set)
-                add(item)
-
-            size -= set.size + 1
+            size = 0
             return true
         }
 
-        val head = findHead(element) ?: return false
-        val set: Set<T>
+        var removeable = root
+        val removeHead = findHead(element)
 
-        if (element > head.value) {
-            set = toNormalSet(setWithoutHead(head.right!!))
-            head.right = null
-        } else {
-            set = toNormalSet(setWithoutHead(head.left!!))
-            head.left = null
+        if (removeHead != null) {
+            if (removeHead.value > element)
+                removeable = removeHead.left
+            else removeable = removeHead.right
         }
 
-        for (item in set)
-            add(item)
+        var replaceable = removeable!!
 
-        size -= set.size + 1
-        cache.obsolete()
+        //right nearest
+        if (replaceable.right != null) {
+            replaceable = replaceable.right!!
+
+            while (replaceable.left != null)
+                replaceable = replaceable.left!!
+        }
+        //left nearest
+        else if (replaceable.left != null) {
+            replaceable = replaceable.left!!
+
+            while (replaceable.right != null)
+                replaceable = replaceable.right!!
+        }
+
+        disconnect(replaceable)
+
+        removeable.right?.let { replaceable.right = it }
+        removeable.left?.let { replaceable.left = it }
+
+        if (removeable === root)
+            root = replaceable
+
+        else if (replaceable.value != element) {
+            if (removeHead!!.value < element)
+                removeHead.right = replaceable
+            else removeHead.left = replaceable
+        }
+
+        size--
         return true
     }
 
@@ -154,7 +151,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
     }
 
     //n = size
-    //Трудоемкость O(ln(n))
+    //Трудоемкость O(n)
     //Ресурсоемкость O(1)
     private fun find(value: T): Node<T>? =
             root?.let { find(it, value) }
@@ -168,43 +165,34 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         }
     }
 
+
     inner class BinaryTreeIterator : MutableIterator<T> {
 
-        private var currentIndex = 0
+        private val cachedDeque = ArrayDeque<T>()
+
+        private lateinit var currentElement: T
+
+        init {
+            cachedDeque.addAll(toSet().toSortedSet())
+        }
 
         /**
          * Поиск следующего элемента
          * Средняя
          */
-        override fun hasNext(): Boolean = currentIndex < cache.getCache().size
+        override fun hasNext(): Boolean = !cachedDeque.isEmpty()
 
-        //n = size
-        //Трудоемкость O(n) (cached: O(1))
-        //Ресурсоемкость O(n)
-        override fun next(): T {
-            if (cache.isObsolete())
-                throw ConcurrentModificationException()
-
-            val currCache = cache.getCache()
-            if (currentIndex >= currCache.size)
-                throw NoSuchElementException()
-
-            return currCache.elementAt(currentIndex++)
+        override fun next(): T{
+            currentElement = cachedDeque.pop()
+            return currentElement
         }
 
         /**
          * Удаление следующего элемента
          * Сложная
          */
-        //n = size
-        //Трудоемкость O(n*ln(n))
-        //Ресурсоемкость O(n)
         override fun remove() {
-            if (cache.isObsolete())
-                throw ConcurrentModificationException()
-
-            remove(cache.getCache().elementAt(--currentIndex))
-            cache.update()
+            remove(currentElement)
         }
     }
 
@@ -212,70 +200,71 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
 
     override fun comparator(): Comparator<in T>? = null
 
-    //n = size
-    //Трудоемкость O(n)
-    //Ресурсоемкость O(n)
-    private fun toSet(): Set<T> {
-        val set = mutableSetOf<T>()
-        if (root == null)
+    public fun toSet(): Set<T> {
+        if (size == 0)
             return setOf()
 
-        helperToSet(root!!, set)
-        return set
+        return helperSubSet(first(), last(), includeLast = true)
     }
 
     //n = size
     //Трудоемкость O(n)
     //Ресурсоемкость O(n)
     private fun setWithoutHead(head: Node<T>): Set<T> {
-        val set = mutableSetOf<T>()
+        var leftNode = head
+        var rightNode = head
 
-        if (head.right != null)
-            set.addAll(toSet(head.right!!))
+        while (leftNode.left != null)
+            leftNode = leftNode.left!!
 
-        if (head.left != null)
-            set.addAll(toSet(head.left!!))
+        while (rightNode.right != null)
+            rightNode = rightNode.right!!
+
+        if (leftNode.value == rightNode.value)
+            return setOf()
+
+        val set = helperSubSet(leftNode.value, rightNode.value, includeLast = true).toMutableSet()
+        set.remove(head.value)
 
         return set
     }
 
-    private fun toSet(head: Node<T>): Set<T> {
-        val set = mutableSetOf<T>()
-        helperToSet(head, set)
-        return set
-    }
-
-    //n = set.size
+    //n = size
     //Трудоемкость O(n)
     //Ресурсоемкость O(n)
-    private fun toNormalSet(set: Set<T>): Set<T> {
-        val mutSet = mutableSetOf<T>()
-        val list = set.toList()
-        val center = list.size / 2
+    private fun helperSubSet(fromElement: T, toElement: T, includeLast: Boolean = false): Set<T> {
+        val set = mutableSetOf<T>()
+        val queue = ArrayDeque<Node<T>>()
 
-        var adder = 0
-        var lastPos = center
+        if (root == null) return set
 
-        while (abs(adder) < list.size) {
-            adder *= -1
+        queue.push(root)
 
-            lastPos += adder
-            mutSet.add(list[lastPos])
+        while (!queue.isEmpty()) {
+            val currentNode = queue.pop()
+            val currentBelongs = currentNode.value in fromElement..toElement
+                    && (includeLast || !currentNode.value.equals(toElement))
 
-            if (adder >= 0) adder++
-            else adder--
+            if (currentBelongs) {
+                set.add(currentNode.value)
+
+                if (currentNode.left != null)
+                    queue.push(currentNode.left)
+
+                if (currentNode.right != null)
+                    queue.push(currentNode.right)
+            }
+
+            else {
+                if (currentNode.value < fromElement && currentNode.right != null)
+                    queue.push(currentNode.right)
+
+                else if (currentNode.value >= toElement && currentNode.left != null)
+                    queue.push(currentNode.left)
+            }
         }
-        return mutSet
-    }
 
-    private fun helperToSet(head: Node<T>, set: MutableSet<T>) {
-        if (head.left != null)
-            helperToSet(head.left!!, set)
-
-        set.add(head.value)
-
-        if (head.right != null)
-            helperToSet(head.right!!, set)
+        return set
     }
 
     /**
@@ -283,14 +272,11 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Очень сложная
      */
     //Not relative
-    //n = size
-    //Трудоемкость O(n ln n)
-    //Ресурсоемкость O(n)
     override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
-        val currentSet = cache.getCache()
+        if (size == 0)
+            return sortedSetOf()
 
-        val subSet = currentSet.filter { it >= fromElement && it < toElement }
-        return subSet.toSortedSet()
+        return helperSubSet(fromElement, toElement).toSortedSet()
     }
 
     /**
@@ -298,14 +284,11 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Сложная
      */
     //Not relative
-    //n = size
-    //Трудоемкость O(n ln n)
-    //Ресурсоемкость O(n)
     override fun headSet(toElement: T): SortedSet<T> {
-        val currentSet = cache.getCache()
+        if (size == 0)
+            return sortedSetOf()
 
-        val subSet = currentSet.filter { it < toElement }
-        return subSet.toSortedSet()
+        return helperSubSet(first(), toElement).toSortedSet()
     }
 
     /**
@@ -313,14 +296,11 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Сложная
      */
     //Not relative
-    //n = size
-    //Трудоемкость O(n ln n)
-    //Ресурсоемкость O(n)
     override fun tailSet(fromElement: T): SortedSet<T> {
-        val currentSet = cache.getCache()
+        if (size == 0)
+            return sortedSetOf()
 
-        val subSet = currentSet.filter { it >= fromElement }
-        return subSet.toSortedSet()
+        return helperSubSet(fromElement, last(), includeLast = true).toSortedSet()
     }
 
     override fun first(): T {
