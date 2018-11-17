@@ -108,7 +108,6 @@ abstract class AbstractHeadTailTest {
         val min = min(first, second)
         val max = max(first, second)
 
-
         val subSet = testTree.subSet(min, max)
         val mutSet = mutableSetOf<Int>()
 

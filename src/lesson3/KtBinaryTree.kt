@@ -232,7 +232,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
     //n = size
     //Трудоемкость O(n)
     //Ресурсоемкость O(n)
-    private fun helperSubSet(fromElement: T, toElement: T, includeLast: Boolean = false): Set<T> {
+    public fun helperSubSet(fromElement: T, toElement: T, includeLast: Boolean = false): Set<T> {
         val set = mutableSetOf<T>()
         val queue = ArrayDeque<Node<T>>()
 
@@ -271,37 +271,26 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
      * Для этой задачи нет тестов (есть только заготовка subSetTest), но её тоже можно решить и их написать
      * Очень сложная
      */
-    //Not relative
-    override fun subSet(fromElement: T, toElement: T): SortedSet<T> {
-        if (size == 0)
-            return sortedSetOf()
-
-        return helperSubSet(fromElement, toElement).toSortedSet()
-    }
+    // based on helperSubSet
+    override fun subSet(fromElement: T, toElement: T) =
+            SubSortedSet(this, fromElement, toElement)
 
     /**
      * Найти множество всех элементов меньше заданного
      * Сложная
      */
-    //Not relative
-    override fun headSet(toElement: T): SortedSet<T> {
-        if (size == 0)
-            return sortedSetOf()
-
-        return helperSubSet(first(), toElement).toSortedSet()
-    }
+    // based on helperSubSet
+    override fun headSet(toElement: T) =
+            SubSortedSet(this, null, toElement)
 
     /**
      * Найти множество всех элементов больше или равных заданного
      * Сложная
      */
-    //Not relative
-    override fun tailSet(fromElement: T): SortedSet<T> {
-        if (size == 0)
-            return sortedSetOf()
+    // based on helperSubSet
+    override fun tailSet(fromElement: T) =
+            SubSortedSet(this, fromElement, null, last = true)
 
-        return helperSubSet(fromElement, last(), includeLast = true).toSortedSet()
-    }
 
     override fun first(): T {
         var current: Node<T> = root ?: throw NoSuchElementException()
