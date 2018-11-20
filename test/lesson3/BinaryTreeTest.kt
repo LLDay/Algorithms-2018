@@ -63,16 +63,24 @@ class BinaryTreeTest {
                 binarySet += element
             }
             val toRemove = list[random.nextInt(list.size)]
+
             treeSet.remove(toRemove)
             binarySet.remove(toRemove)
+
             println("Removing $toRemove from $list")
+
             assertEquals<SortedSet<*>>(treeSet, binarySet, "After removal of $toRemove from $list")
             assertEquals(treeSet.size, binarySet.size)
+
+            println(binarySet.toSortedSet().toString())
+            println(treeSet.toString())
+
             for (element in list) {
                 val inn = element != toRemove
                 assertEquals(inn, element in binarySet,
                         "$element should be ${if (inn) "in" else "not in"} tree")
             }
+
             assertTrue(binarySet.checkInvariant())
         }
     }
@@ -142,11 +150,12 @@ class BinaryTreeTest {
             val iterator = binarySet.iterator()
             while (iterator.hasNext()) {
                 val element = iterator.next()
-                print("$element ")
                 if (element == toRemove) {
                     iterator.remove()
                 }
             }
+            println(binarySet.toString())
+            println(treeSet.toString())
             println()
             assertEquals<SortedSet<*>>(treeSet, binarySet, "After removal of $toRemove from $list")
             assertEquals(treeSet.size, binarySet.size)

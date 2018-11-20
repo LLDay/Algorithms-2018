@@ -92,7 +92,7 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
     //Трудоемкость O(n)
     //Ресурсоемкость O(1)
     override fun remove(element: T): Boolean {
-        if (root == null && !contains(element))
+        if (root == null || !contains(element))
             return false
 
         if (size == 1) {
@@ -127,7 +127,11 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
                 replaceable = replaceable.right!!
         }
 
-        disconnect(replaceable)
+        val replaceableHead = findHead(replaceable.value)!!
+
+        if (replaceableHead.value > replaceable.value)
+            replaceableHead.left = replaceable.right
+        else replaceableHead.right = replaceable.left
 
         removeable.right?.let { replaceable.right = it }
         removeable.left?.let { replaceable.left = it }

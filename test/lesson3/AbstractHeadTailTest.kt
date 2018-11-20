@@ -126,28 +126,29 @@ abstract class AbstractHeadTailTest {
     }
 
     protected fun doRemoveTest() {
-        val testTree = KtBinaryTree<Int>()
+        for (i in 0..100) {
+            val testTree = KtBinaryTree<Int>()
 
-        for (i in 0..1000)
-            testTree.add(rand.nextInt())
+            for (i in 0..100)
+                testTree.add(rand.nextInt())
 
-        val currentSize = testTree.size
-        val removeSet = mutableSetOf<Int>()
+            val currentSize = testTree.size
+            val removeSet = mutableSetOf<Int>()
 
-        removeSet.add(testTree.first())
-        removeSet.add(testTree.last())
+            for (i in 0 until currentSize step 3)
+                removeSet.add(testTree.elementAt(i))
 
-        for (i in 0 until currentSize step 3)
-            removeSet.add(testTree.elementAt(i))
+            val removeList = removeSet.shuffled()
 
-        for (item in removeSet)
-            testTree.remove(item)
+            for (item in removeList)
+                testTree.remove(item)
 
-        for (item in removeSet)
-            assertEquals(false, testTree.contains(item))
+            for (item in removeList)
+                assertEquals(false, testTree.contains(item))
 
-        assertEquals(testTree.size, currentSize - removeSet.size)
-        assertEquals(true, testTree.checkInvariant())
+            assertEquals(testTree.size, currentSize - removeList.size)
+            assertEquals(true, testTree.checkInvariant())
+        }
     }
 
     protected open fun doIteratorTest() {
