@@ -57,17 +57,6 @@ class KtBinaryTree<T : Comparable<T>> : AbstractMutableSet<T>(), CheckableSorted
         return right == null || right.value > node.value && checkInvariant(right)
     }
 
-    private fun disconnect(node: Node<T>) {
-        val nodeHead = findHead(node.value)
-
-        if (nodeHead != null) {
-            if (nodeHead.value < node.value)
-                nodeHead.right = null
-            else
-                nodeHead.left = null
-        }
-    }
-
     //n = size
     //Трудоемкость O(n)
     //Ресурсоемкость O(1)
