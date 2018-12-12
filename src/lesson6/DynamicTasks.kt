@@ -2,7 +2,9 @@
 
 package lesson6
 
+import java.io.File
 import kotlin.math.max
+import kotlin.math.min
 
 
 /**
@@ -17,28 +19,30 @@ import kotlin.math.max
  * При сравнении подстрок, регистр символов *имеет* значение.
  */
 
-// n = first.length
-// m = second.length
+// n = first.size
+// m = second.size
 // Трудоемкость O(m * n)
 // Ресурсоемкость O((m + 1) * (n + 1))
-fun longestCommonSubSequence(first: String, second: String): String {
-    val table = Array(first.length + 1) { IntArray(second.length + 1) { 0 } }
+fun <T> lcs(first: Collection<T>, second: Collection<T>): List<T> {
+    val table = Array(first.size + 1) { IntArray(second.size + 1) { 0 } }
 
     // filling table
-    for (i in 1..first.length)
-        for (j in 1..second.length)
-            if (first[i - 1] == second[j - 1])
+    for (i in 1..first.size)
+        for (j in 1..second.size)
+            if (first.elementAt(i - 1) == second.elementAt(j - 1))
                 table[i][j] = table[i - 1][j - 1] + 1
             else table[i][j] = max(table[i - 1][j], table[i][j - 1])
 
-    var i = first.length
-    var j = second.length
-    val strBuilder = StringBuilder()
+    var i = first.size
+    var j = second.size
+
+    val returnList = mutableListOf<T>()
 
     // finding the way
     while (i > 0 && j > 0) {
-        if (first[i - 1] == second[j - 1]) {
-            strBuilder.append(first[i - 1])
+        val currElement = first.elementAt(i - 1)
+        if (currElement == second.elementAt(j - 1)) {
+            returnList.add(currElement)
             i--; j--
             continue
         }
@@ -48,7 +52,12 @@ fun longestCommonSubSequence(first: String, second: String): String {
         else j--
     }
 
-    return strBuilder.toString().reversed()
+    return returnList.reversed()
+}
+
+fun longestCommonSubSequence(first: String, second: String): String {
+    val lcsList = lcs(first.toList(), second.toList())
+    return lcsList.joinToString("")
 }
 
 
@@ -65,7 +74,8 @@ fun longestCommonSubSequence(first: String, second: String): String {
  * В примере ответами являются 2, 8, 9, 12 или 2, 5, 9, 12 -- выбираем первую из них.
  */
 fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
-    TODO()
+    val sortedList = list.sorted()
+    return lcs(list, sortedList)
 }
 
 /**
@@ -88,8 +98,62 @@ fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
  *
  * Здесь ответ 2 + 3 + 4 + 1 + 2 = 12
  */
+
+fun getShortestPath(table: Array<IntArray>): Int {
+    val rows = table.size
+    val columns = table.first().size
+
+    val minTable = Array(rows) { IntArray(columns) { Int.MAX_VALUE } }
+    minTable[0][0] = table[0][0]
+    fillMinPathTable(table, minTable, rows - 1, columns - 1)
+
+    return minTable.last().last()
+}
+
+//n = InputTable.rows
+//m = InputTable.columns
+//Трудоемкость O(n * m)
+//Ресурсоемкость O(n * m)
+fun fillMinPathTable(table: Array<IntArray>, minTable: Array<IntArray>, row: Int, column: Int) {
+    if (row - 1 >= 0 && minTable[row - 1][column] == Int.MAX_VALUE)
+        fillMinPathTable(table, minTable, row - 1, column)
+
+    if (column - 1 >= 0 && minTable[row][column - 1] == Int.MAX_VALUE)
+        fillMinPathTable(table, minTable, row, column - 1)
+
+    val currentCell = table[row][column]
+    var minElement = Int.MAX_VALUE
+
+    if (row > 0)
+        minElement = min(minElement, minTable[row - 1][column] + currentCell)
+    if (column > 0)
+        minElement = min(minElement, minTable[row][column - 1] + currentCell)
+    if (row > 0 && column > 0)
+        minElement = min(minElement, minTable[row - 1][column - 1] + currentCell)
+
+    if (minElement == Int.MAX_VALUE)
+        minTable[row][column] = currentCell
+    else minTable[row][column] = minElement
+}
+
 fun shortestPathOnField(inputName: String): Int {
-    TODO()
+    val buffReader = File(inputName).bufferedReader()
+    val lines = buffReader.readLines()
+    buffReader.close()
+
+    if (lines.isEmpty())
+        return -1
+
+    val rows = lines.size
+    val columns = lines[0].length / 2 + 1
+    val table = Array(rows) { IntArray(columns) }
+
+    for (i in 0 until rows) {
+        for (j in 0 until columns)
+            table[i][j] = lines[i][j * 2].toString().toInt()
+    }
+
+    return getShortestPath(table)
 }
 
 // Задачу "Максимальное независимое множество вершин в графе без циклов"
