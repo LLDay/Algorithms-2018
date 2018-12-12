@@ -2,6 +2,9 @@
 
 package lesson6
 
+import kotlin.math.max
+
+
 /**
  * Наибольшая общая подпоследовательность.
  * Средняя
@@ -13,9 +16,41 @@ package lesson6
  * Если общей подпоследовательности нет, вернуть пустую строку.
  * При сравнении подстрок, регистр символов *имеет* значение.
  */
+
+// n = first.length
+// m = second.length
+// Трудоемкость O(m * n)
+// Ресурсоемкость O((m + 1) * (n + 1))
 fun longestCommonSubSequence(first: String, second: String): String {
-    TODO()
+    val table = Array(first.length + 1) { IntArray(second.length + 1) { 0 } }
+
+    // filling table
+    for (i in 1..first.length)
+        for (j in 1..second.length)
+            if (first[i - 1] == second[j - 1])
+                table[i][j] = table[i - 1][j - 1] + 1
+            else table[i][j] = max(table[i - 1][j], table[i][j - 1])
+
+    var i = first.length
+    var j = second.length
+    val strBuilder = StringBuilder()
+
+    // finding the way
+    while (i > 0 && j > 0) {
+        if (first[i - 1] == second[j - 1]) {
+            strBuilder.append(first[i - 1])
+            i--; j--
+            continue
+        }
+
+        if (table[i - 1][j] == table[i][j])
+            i--
+        else j--
+    }
+
+    return strBuilder.toString().reversed()
 }
+
 
 /**
  * Наибольшая возрастающая подпоследовательность
