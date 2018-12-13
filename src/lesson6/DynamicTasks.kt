@@ -99,41 +99,36 @@ fun longestIncreasingSubSequence(list: List<Int>): List<Int> {
  * Здесь ответ 2 + 3 + 4 + 1 + 2 = 12
  */
 
-fun getShortestPath(table: Array<IntArray>): Int {
-    val rows = table.size
-    val columns = table.first().size
-
-    val minTable = Array(rows) { IntArray(columns) { Int.MAX_VALUE } }
-    minTable[0][0] = table[0][0]
-    fillMinPathTable(table, minTable, rows - 1, columns - 1)
-
-    return minTable.last().last()
-}
 
 //n = InputTable.rows
 //m = InputTable.columns
 //Трудоемкость O(n * m)
 //Ресурсоемкость O(n * m)
-fun fillMinPathTable(table: Array<IntArray>, minTable: Array<IntArray>, row: Int, column: Int) {
-    if (row - 1 >= 0 && minTable[row - 1][column] == Int.MAX_VALUE)
-        fillMinPathTable(table, minTable, row - 1, column)
+fun returnMinPathTable(table: Array<IntArray>): Array<IntArray> {
+    val rows = table.size
+    val columns = table.first().size
+    val minTable = Array(rows) { IntArray(columns) }
+    minTable[0][0] = table[0][0]
 
-    if (column - 1 >= 0 && minTable[row][column - 1] == Int.MAX_VALUE)
-        fillMinPathTable(table, minTable, row, column - 1)
+    for (i in 0 until rows)
+        for (j in 0 until columns) {
+            if (i == 0 && j == 0)
+                continue
 
-    val currentCell = table[row][column]
-    var minElement = Int.MAX_VALUE
+            var minElement = Int.MAX_VALUE
+            val currentCell = table[i][j]
 
-    if (row > 0)
-        minElement = min(minElement, minTable[row - 1][column] + currentCell)
-    if (column > 0)
-        minElement = min(minElement, minTable[row][column - 1] + currentCell)
-    if (row > 0 && column > 0)
-        minElement = min(minElement, minTable[row - 1][column - 1] + currentCell)
+            if (i > 0)
+                minElement = min(minElement, minTable[i - 1][j] + currentCell)
+            if (j > 0)
+                minElement = min(minElement, minTable[i][j - 1] + currentCell)
+            if (i > 0 && j > 0)
+                minElement = min(minElement, minTable[i - 1][j - 1] + currentCell)
 
-    if (minElement == Int.MAX_VALUE)
-        minTable[row][column] = currentCell
-    else minTable[row][column] = minElement
+            minTable[i][j] = minElement
+        }
+
+    return minTable
 }
 
 fun shortestPathOnField(inputName: String): Int {
@@ -153,7 +148,7 @@ fun shortestPathOnField(inputName: String): Int {
             table[i][j] = lines[i][j * 2].toString().toInt()
     }
 
-    return getShortestPath(table)
+    return returnMinPathTable(table).last().last()
 }
 
 // Задачу "Максимальное независимое множество вершин в графе без циклов"
